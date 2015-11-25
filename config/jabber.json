@@ -1,0 +1,10 @@
+{
+  "host": "xmpp.local",
+  "defaultPassword": "123",
+  "status": {
+    "jid": "status@xmpp.local",
+    "password": "123",
+    "host": "xmpp.local",
+    "reconnect": true
+  }
+}

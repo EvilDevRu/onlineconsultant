@@ -21,8 +21,8 @@ module.exports = {
             login: {
                 type: Sequelize.STRING,
                 allowNull: false,
-                length: 12,
-                unique: true
+                unique: true,
+                length: 12
             },
             name: {
                 type: Sequelize.STRING,

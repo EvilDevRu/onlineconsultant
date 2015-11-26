@@ -4,6 +4,10 @@
  * @license MIT
  */
 
+/**
+ * TODO: Сделать валидатор уникальности по логину.
+ */
+
 'use strict';
 
 var Sequelize = Nyama.app().db.Sequelize;

@@ -17,20 +17,6 @@ var config = require('./config/console.js'),
  */
 _.Q.spawn(function*() {
     app = yield Nyama.createApplication(config);
-
-
-    /*yield app.db.getModel('Users').createUser('evildev', 'Имя Барнаул', 'Название должности', 1, true);
-     yield app.db.getModel('Users').createUser('evildev1', 'Имя 2', 'Должность', 2, true);
-    yield app.db.getModel('Prosody').createUser('status');
-    yield app.db.getModel('Groups').create({
-        name: 'Барнаул',
-        alias: '1'
-    });
-    yield app.db.getModel('Groups').create({
-        name: 'Белгород',
-        alias: '8'
-    });*/
-
     app.server.onConnection = onConnection;
     app.server.start();
 });

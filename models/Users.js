@@ -20,6 +20,7 @@ module.exports = {
         login: {
             type: Sequelize.STRING,
             allowNull: false,
+            unique: true,
             length: 12
         },
         name: {

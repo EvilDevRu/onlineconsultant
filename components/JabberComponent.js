@@ -24,32 +24,28 @@ module.exports = function() {
 
         if (!config.status) {
             defer.resolve();
-            return;
         }
+        else {
+            //  Подключаем аккаунт, который будет отвечать за проверку статусов менеджеров.
+            statusClient.connect(config.status);
+            statusClient.on('online', function () {
+                console.info('Jabber status account is online');
 
-        //  Подключаем аккаунт, который будет отвечать за проверку статусов менеджеров.
-        statusClient.connect(config.status);
-        statusClient.on('online', function() {
-            console.info('Jabber status account is online');
+                //  Получим список всех пользователей (менеджеров) по подпишемся на них.
+                var users = Nyama.app().db.getModel('Users').findAll({
+                    where: {
+                        is_active: 1
+                    }
+                });
 
-            //  Получим список всех пользователей (менеджеров) по подпишемся на них.
-            var users = Nyama.app().db.getModel('Users').findAll({
-                where: {
-                    is_active: 1
-                }
+                _.Q.spawnMap(users, function (user) {
+                    console.log('Jabber status account subscribe to', user.login);
+                    statusClient.subscribe(user.login + '@' + Nyama.app().jabber.getHost());
+                });
+
+                defer.resolve();
             });
-
-            _.Q.spawnMap(users, function(user) {
-                console.log('Jabber status account subscribe to', user.login);
-                statusClient.subscribe(user.login + '@' + Nyama.app().jabber.getHost());
-            });
-
-            defer.resolve();
-        });
-
-        /*statusClient.on('subscribe', function(from) {
-            statusClient.acceptSubscription(from);
-        });*/
+        }
 
         return defer.promise;
     };

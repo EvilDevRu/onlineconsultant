@@ -46,6 +46,7 @@ var OnlineConsult = function(hostName) {
                 '</div>' +
                 '<form class="oc-footer" id="ocMsgForm">' +
                     '<textarea class="form-control" placeholder="Текст сообщения" maxlength="512"></textarea>' +
+                    '<small class="text-muted">(beta)</small>' +
                     '<button class="btn btn-xs pull-right" disabled="disabled" id="ocSendMessage">отправить</button>' +
                 '</form>' +
             '</div>' +
@@ -80,12 +81,12 @@ var OnlineConsult = function(hostName) {
          * Отправка сообщения.
          */
             .on('submit', '#ocMsgForm', function() {
-                _this.sendMessage(jQuery(this).find('textarea').val());
+                _this.sendMessage(null, jQuery(this).find('textarea').val(), false, window.ONLINE_CONSULT_GROUP_ALIAS || null);
                 return false;
             })
             .on('keydown', '#ocMsgForm textarea', function(e) {
                 if (e.ctrlKey && e.keyCode === 13) {
-                    _this.sendMessage(jQuery(this).val());
+                    _this.sendMessage(null, jQuery(this).val(), false, window.ONLINE_CONSULT_GROUP_ALIAS || null);
                 }
             });
     };
@@ -113,6 +114,14 @@ var OnlineConsult = function(hostName) {
             userId = id;
             socket = io.connect('ws://' + hostName, { jsonp: false });
 
+            //  Заполним историю переписки.
+            var hostory = this.getHistory();
+            for (var timestamp in hostory) {
+                if (hostory.hasOwnProperty(timestamp)) {
+                    this.addMessage(hostory[timestamp].name, hostory[timestamp].message, hostory[timestamp].isManager);
+                }
+            }
+
 
             /**
              * Срабатывает при соединении пользователя с сервером.
@@ -136,7 +145,7 @@ var OnlineConsult = function(hostName) {
              * Входящие сообщения.
              */
             socket.on('message', function(message) {
-                this.sendMessage(message, true);
+                this.sendMessage(jQuery('#ocName').text(), message, true, window.ONLINE_CONSULT_GROUP_ALIAS || null);
             }.bind(this));
 
             /**
@@ -178,26 +187,42 @@ var OnlineConsult = function(hostName) {
 
     /**
      * Отправит сообщение.
+     * @param {String} name
      * @param {String} message
      * @param {Boolean} isIncoming (опционально)
-     * @return {Boolean}
+     * @param {String|Number} groupId
      */
-    this.sendMessage = function(message, isIncoming) {
+    this.sendMessage = function(name, message, isIncoming, groupId) {
         if (!message || !message.length || !socket.connected) {
             return false;
         }
 
-        var $c = $('.oc-messages-content');
+        this.addMessage(name, message, isIncoming);
+        this.addHistory(+new Date(), name, groupId, message, isIncoming);
 
         if (isIncoming) {
-            $c.append('<li class="oc-msg-manager"><strong>' + jQuery('#ocName').text() + ':</strong> ' + message + '</li>');
             incoming.play();
         }
         else {
-            $c.append('<li><strong>Вы:</strong> ' + message + '</li>');
             jQuery('textarea', '#ocMsgForm').val('').focus();
             socket.emit('message', message);
         }
+    };
+
+    /**
+     * Добавит сообщение в чат.
+     * @param {String} name
+     * @param {String} message
+     * @param {Boolean} isIncoming (опционально)
+     */
+    this.addMessage = function(name, message, isIncoming) {
+        if (!message || !message.length) {
+            return false;
+        }
+
+        $('.oc-messages-content').append(isIncoming ?
+            ('<li class="oc-msg-manager"><strong>' + name + ':</strong> ' + message + '</li>') :
+            ('<li><strong>Вы:</strong> ' + message + '</li>'));
     };
 
     /**
@@ -223,6 +248,42 @@ var OnlineConsult = function(hostName) {
         groupName = name;
     };
      */
+
+    /**
+     * Вернет локальную историю переписки клиента с менеджером.
+     * @return {Object}
+     */
+    this.getHistory = function() {
+        try {
+            return JSON.parse(localStorage.getItem('ocHistory') || '{}');
+        }
+        catch (e) {
+            return {};
+        }
+    };
+
+    /**
+     * Добавит запись в локальную историю переписки клиента с менеджером.
+     * @param {String} time
+     * @param {String} name
+     * @param {String} groupId
+     * @param {String} message
+     * @param {Boolean} isManager
+     */
+    this.addHistory = function(time, name, groupId, message, isManager) {
+        try {
+            var history = this.getHistory();
+            history[time] = {
+                name: name || '',
+                groupId: groupId || null,
+                message: message || '',
+                isManager: isManager || false
+            };
+            localStorage.setItem('ocHistory', JSON.stringify(history));
+        }
+        catch (e) {
+        }
+    };
 };
 
 /**

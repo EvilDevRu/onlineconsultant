@@ -166,12 +166,12 @@ var OnlineConsult = function(hostName) {
                 //jQuery('#ocStatus').text(status === 'online' ? 'онлайн' : 'офлайн');
                 //jQuery('#ocSendMessage').prop('disabled', status !== 'online');
                 if (status === 'online') {
-                    jQuery('#ocStatus').text('онлайн');
+                    jQuery('#ocStatus').text('онлайн').css('opacity', 1).show();
                     jQuery('#ocSendMessage').prop('disabled', false);
                 }
                 else {
                     //  TODO: Временное решение пока нету офлайн отправки сообщений.
-                    jQuery('#ocStatus').text('офлайн');
+                    jQuery('#ocStatus').text('офлайн').css('opacity', 1).show();
                     jQuery('#ocSendMessage').prop('disabled', true);
                     jQuery('#ocHide').click();
                 }

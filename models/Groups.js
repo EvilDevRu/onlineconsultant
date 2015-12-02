@@ -40,7 +40,12 @@ module.exports = {
              * FIXME: Перести все в связи и сделать многие ко многим.
              */
             getUsers: function() {
-                return Nyama.app().db.getModel('Users').findAll({ where: { group_id: this.id } });
+                return Nyama.app().db.getModel('Users').findAll({
+                    where: {
+                        group_id: this.id,
+                        is_active: true
+                    }
+                });
             }
         }
     }

@@ -37,3 +37,4 @@ config/config.json
 config/jabber.json
 config/database.json
 public/users/
+build/

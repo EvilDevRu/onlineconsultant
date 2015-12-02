@@ -18,7 +18,7 @@ var config = require('./config/console.js'),
 _.Q.spawn(function*() {
     app = yield Nyama.createApplication(config);
     app.server.onConnection = onConnection;
-    app.server.start();
+    yield app.server.start();
 });
 
 /**
@@ -46,23 +46,6 @@ function onConnection(socket) {
             socket.emit('message', message);
         });
 
-
-        //console.log("Session: ", socket.handshake);
-        //socket.handshake.session = { ss: 1 };
-
-        // Посылаем клиенту сообщение о том, что он успешно подключился и его имя
-        /*socket.json.send({ 'event': 'connected', 'name': id, 'time': time });
-
-         // Посылаем всем остальным пользователям, что подключился новый клиент и его имя
-         socket.broadcast.json.send({ 'event': 'userJoined', 'name': id, 'time': time });
-
-         // Навешиваем обработчик на входящее сообщение
-         socket.on('message', onMessage.bind(socket).bind(id));
-
-         // При отключении клиента - уведомляем остальных
-         socket.on('disconnect', onDisconnect.bind(id));*/
-
-
         /**
          * Отправит более свободного менеджера.
          */
@@ -71,7 +54,7 @@ function onConnection(socket) {
                 if (!_.isNull(data.group)) {
                     var group = yield app.db.getModel('Groups').find({
                             where: {
-                                alias: data.groupAlias
+                                alias: data.groupAlias + ''
                             }
                         }),
                         users = [];
@@ -86,6 +69,11 @@ function onConnection(socket) {
 
                     //  TODO: Вычислим менеджера по его загрузке, а пока берем первого попавшегося.
                     manager = _.first(users);
+                    if (!manager) {
+                        console.error('Менеджер не найден');
+                        socket.emit('get_manager_status', 'offline');
+                        return;
+                    }
 
                     socket.emit('get_manager', {
                         name: manager.name,
@@ -119,20 +107,6 @@ function onConnection(socket) {
             jabber.send(manager.login + '@' + app.jabber.getHost(), message);
         });
     });
-}
-
-/**
- * Событие отправки сообщения.
- * @param {string} message
- */
-function onMessage(message) {
-    var time = (new Date()).toLocaleTimeString();
-
-    // Уведомляем клиента, что его сообщение успешно дошло до сервера
-    //this.socket.json.send({'event': 'messageSent', 'name': this.id, 'text': message, 'time': time});
-
-    // Отсылаем сообщение остальным участникам чата
-    //this.socket.broadcast.json.send({'event': 'messageReceived', 'name': this.id, 'text': message, 'time': time})
 }
 
 /**

@@ -1,0 +1,49 @@
+#!/bin/sh
+
+forever="/bin/node /bin/forever"
+workdir="/var/www/YOUR_PROJECT"
+script="app.js"
+
+
+start()
+{
+  export NODE_ENV=production
+  if [ $(forever list | grep node | wc -l) -eq 0 ]
+  then
+    ${forever} -a -l ${workdir}/main.log -e ${workdir}/error.log -o /dev/null start ${workdir}/${script}
+    echo "Online consultant is now started!"
+  else
+    echo "Online consultant is runing"
+  fi
+}
+
+stop()
+{
+  ${forever} stop ${workdir}/${script}
+  echo "Stop online consultant"
+}
+
+restart()
+{
+  ${forever} restart ${workdir}/${script}
+  echo "Restart online consultant"
+}
+
+
+case "$1" in
+    start)
+        start
+    ;;
+    stop)
+        stop
+    ;;
+    reload|restart)
+        restart
+    ;;
+    *)
+        echo "Usage: {start|stop|restart}"
+        exit 1
+    ;;
+esac
+
+exit 0

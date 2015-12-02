@@ -34,7 +34,7 @@ module.exports = function() {
                 //  Получим список всех пользователей (менеджеров) по подпишемся на них.
                 var users = Nyama.app().db.getModel('Users').findAll({
                     where: {
-                        is_active: 1
+                        is_active: true
                     }
                 });
 
@@ -66,7 +66,7 @@ module.exports = function() {
         console.log('jabber connect', login);
 
         _.Q.spawn(function*() {
-            var model = yield prosody.find({ where: { user: login }});
+            var model = yield prosody.find({ where: { user: login + '' }});
             if (!model) {
                 yield prosody.createUser(login);
             }

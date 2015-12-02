@@ -37,7 +37,8 @@ module.exports = function() {
      * Запуск сервера.
      */
     this.start = function() {
-        var port = config.port || 8080;
+        var port = config.port || 8080,
+            defer = _.Q.defer();
 
         app = Express();
         http = require('http').Server(app);
@@ -78,7 +79,10 @@ module.exports = function() {
 
         http.listen(port, function() {
             console.log('Server is started on ' + port + ' port');
+            defer.resolve();
         });
+
+        return defer.promise;
     };
 
     /**

@@ -82,6 +82,11 @@ var OnlineConsult = function(hostName) {
             .on('submit', '#ocMsgForm', function() {
                 _this.sendMessage(jQuery(this).find('textarea').val());
                 return false;
+            })
+            .on('keydown', '#ocMsgForm textarea', function(e) {
+                if (e.ctrlKey && e.keyCode === 13) {
+                    _this.sendMessage(jQuery(this).val());
+                }
             });
     };
 

@@ -24,6 +24,12 @@ _.Q.spawn(function*() {
 
             console.log('Add new user');
 
+            //  TODO: Сделать запрещенные символы.
+            if (process.argv[3].indexOf('@') > -1) {
+                console.error('@ - не допускается');
+                return;
+            }
+
             yield app.db.getModel('Users').createUser(
                 process.argv[3],
                 process.argv[4],

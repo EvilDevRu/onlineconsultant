@@ -32,7 +32,7 @@ var OnlineConsult = function(hostName) {
                 '<div class="btn-block oc-bg oc-header">' +
                     '<div class="btn btn-block oc-bg-inside">' +
                         'Онлайн-консультант' +
-                        '<div class="pull-right"><span class="btn-oc" id="ocHide">_</span></div>' +
+                        '<div class="pull-right"><span class="btn-oc" id="ocClose">_</span></div>' +
                     '</div>' +
                 '</div>' +
                 '<div class="oc-manager" id="ocManager">' +
@@ -63,19 +63,13 @@ var OnlineConsult = function(hostName) {
          * Откроет диалог.
          */
             .on('click', '#ocOpen', function() {
-                //  TODO: Временное решение пока скрывать окно, если менеджер не в сети.
-                if ($('#ocStatus').text() !== 'офлайн') {
-                    $(this).hide().closest('.onlineconsult').find('.oc-window').fadeIn();
-                }
-                return false;
+                return _this.onOpen.call(this);
             })
         /**
          * Скроет диалог.
          */
-            .on('click', '#ocHide', function() {
-                jQuery('.oc-window', '.onlineconsult').hide();
-                jQuery('#ocOpen').fadeIn();
-                return false;
+            .on('click', '#ocClose', function() {
+                return _this.onClose.call(this);
             })
         /**
          * Отправка сообщения.
@@ -93,8 +87,9 @@ var OnlineConsult = function(hostName) {
 
     /**
      * Соединится с сервером.
+     * @param {Function} callback
      */
-    this.connect = function() {
+    this.connect = function(callback) {
         if (!io) {
             console.log('No IO defined');
             return;
@@ -107,7 +102,7 @@ var OnlineConsult = function(hostName) {
         //  Получим ID пользователя в системе.
         this.getUserId(function (error, id) {
             if (error) {
-                console.log('Что то пошло не так.');
+                callback(error || 'Что то пошло не так.');
                 return;
             }
 
@@ -166,14 +161,14 @@ var OnlineConsult = function(hostName) {
                 //jQuery('#ocStatus').text(status === 'online' ? 'онлайн' : 'офлайн');
                 //jQuery('#ocSendMessage').prop('disabled', status !== 'online');
                 if (status === 'online') {
-                    jQuery('#ocStatus').text('онлайн').css('opacity', 1).show();
+                    jQuery('#ocStatus').text('онлайн');
                     jQuery('#ocSendMessage').prop('disabled', false);
                 }
                 else {
                     //  TODO: Временное решение пока нету офлайн отправки сообщений.
-                    jQuery('#ocStatus').text('офлайн').css('opacity', 1).show();
+                    jQuery('#ocStatus').text('офлайн');
                     jQuery('#ocSendMessage').prop('disabled', true);
-                    jQuery('#ocHide').click();
+                    jQuery('#ocClose').click();
                 }
             });
 
@@ -182,6 +177,8 @@ var OnlineConsult = function(hostName) {
             setInterval(function() {
                 socket.emit('get_manager_status');
             }, 5000);
+
+            callback();
         }.bind(this));
     };
 
@@ -241,15 +238,6 @@ var OnlineConsult = function(hostName) {
     };
 
     /**
-     * Установит имя группы.
-     * @param {String} name
-    this.setGroupName = function(name) {
-        //  TODO: Переустанавливать соединение на новую группу без перезагрузки.
-        groupName = name;
-    };
-     */
-
-    /**
      * Вернет локальную историю переписки клиента с менеджером.
      * @return {Object}
      */
@@ -287,12 +275,33 @@ var OnlineConsult = function(hostName) {
 };
 
 /**
+ * Вызывается при открытии диалога переписки.
+ */
+OnlineConsult.prototype.onOpen = function() {
+    //  TODO: Временное решение пока скрывать окно, если менеджер не в сети.
+    if (jQuery('#ocStatus').text() !== 'офлайн') {
+        jQuery(this).hide().closest('.onlineconsult').find('.oc-window').fadeIn();
+    }
+    return false;
+};
+
+/**
+ * Вызывается при закрытии диалога переписки.
+ */
+OnlineConsult.prototype.onClose = function() {
+    jQuery('.oc-window', '.onlineconsult').hide();
+    jQuery('#ocOpen').fadeIn();
+    return false;
+};
+
+/**
  * Запуск
  */
 if (jQuery) {
     jQuery(function() {
-        var consultInstance = new OnlineConsult(window.ONLINE_CONSULT_HOST_NAME);
-        consultInstance.init();
-        consultInstance.connect();
+        window.oc = new OnlineConsult(window.ONLINE_CONSULT_HOST_NAME);
+        window.oc.connect(function() {
+            window.oc.init();
+        });
     });
 }
